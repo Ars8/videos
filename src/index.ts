@@ -37,7 +37,7 @@ app.post('/videos', (req: Request, res: Response) => {
         author: 'it-incubator.eu'
     }
     videos.push(newVideo)
-    res.send(newVideo)
+    res.status(201).send(newVideo)
 })
 app.delete('/videos/:id', (req: Request, res: Response) => {
     const id = +req.params.id
