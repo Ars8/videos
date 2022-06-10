@@ -6,7 +6,7 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000
 
-const videos = [
+let videos = [
     {id: 1, title: 'About JS - 01', author: 'it-incubator.eu'},
     {id: 2, title: 'About JS - 02', author: 'it-incubator.eu'},
     {id: 3, title: 'About JS - 03', author: 'it-incubator.eu'},
@@ -27,10 +27,25 @@ app.get('/videos', (req: Request, res: Response) => {
 })
 app.get('/videos/:videoId', (req: Request, res: Response) => {
     const id = +req.params.videoId
-    const result = videos.find(p => p.id === id)
-    res.send(result)
+    const video = videos.find(p => p.id === id)
+    if (video) {
+        res.status(200).send(video)
+    }else {
+        res.send(404)
+    }
 })
 app.post('/videos', (req: Request, res: Response) => {
+    let title = req.body.title
+    if (!title || typeof title !== 'string' || !title.trim() || title.length > 40) {
+        res.status(400).send({
+            errorMessages: [{
+                'message': 'Incorrect title',
+                'field': 'title'
+            }],
+            resultCode: 1
+        })
+        return
+    }
     const newVideo = {
         id: +(new Date()),
         title: req.body.title,
@@ -39,20 +54,33 @@ app.post('/videos', (req: Request, res: Response) => {
     videos.push(newVideo)
     res.status(201).send(newVideo)
 })
-app.delete('/videos/:id', (req: Request, res: Response) => {
-    const id = +req.params.id
-    const videosNewArr = videos.filter(item => {
-        return item.id != id
-    })
-    console.log(videosNewArr)
-    res.send(videosNewArr)
+app.delete('/videos/:videoId', (req: Request, res: Response) => {
+    const id = +req.params.videoId
+    const newVideos = videos.filter(item => { return item.id !== id })
+    if (newVideos.length < videos.length) {
+        videos = newVideos
+        res.send(204)
+    } else {
+        res.send(404)
+    }
 })
-app.put('/videos/:id', (req: Request, res: Response) => {
-    const id = +req.params.id
-    let videoUpdate = videos.find(item => item.id === id)
-    if (videoUpdate) {
-        videoUpdate.title = req.body.title
-        res.send(videos)
+app.put('/videos/:videoId', (req: Request, res: Response) => {
+    let title = req.body.title
+    if (!title || typeof title !== 'string' || !title.trim() || title.length > 40) {
+        res.status(400).send({
+            errorsMessages: [{
+                message: 'Incorrect title',
+                field: 'title'
+            }],
+            resultCode: 1
+        })
+        return
+    }
+    const id = +req.params.videoId
+    const video = videos.find(item => item.id === id)
+    if (video) {
+        video.title = title
+        res.status(204).send(videos)
     } else {
         res.send(404)
     }
